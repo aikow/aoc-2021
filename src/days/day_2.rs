@@ -94,7 +94,7 @@ mod problem_1 {
 
     pub fn problem_1() {
         let mut pos = SubPos::new();
-        let commands = SubCmd::load_commands_from_file("problems/2/commands.txt");
+        let commands = SubCmd::load_commands_from_file("inputs/2/day_2.txt");
         println!("Commands: {}", commands.len());
         pos.move_commands(&commands);
         println!("position {:?}", pos);
@@ -197,7 +197,7 @@ pub mod problem_2 {
 
     pub fn answer() {
         let mut pos = SubPos::new();
-        let commands = SubCmd::load_commands_from_file("problems/2/commands.txt");
+        let commands = SubCmd::load_commands_from_file("inputs/2/day_2.txt");
         println!("Commands: {}", commands.len());
         pos.move_commands(&commands);
         println!("position {:?}", pos);

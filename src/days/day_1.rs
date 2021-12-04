@@ -58,14 +58,14 @@ pub mod answer {
 
     fn problem_1() {
         println!("Day 1, Problem 1");
-        let input = load_from_file("problems/1/1/day_3.txt");
+        let input = load_from_file("inputs/1/1/day_3.txt");
         let num_increases = num_increases(&input);
         println!("Number of increases is {}", num_increases);
     }
 
     fn problem_2() {
         println!("Day 1, Problem 1");
-        let input = load_from_file("problems/1/1/day_3.txt");
+        let input = load_from_file("inputs/1/1/day_3.txt");
         println!("Length is {}", input.len());
         let input = sliding_window(&input, 3);
         println!("Length is {}", input.len());
