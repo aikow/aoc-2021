@@ -17,8 +17,21 @@ pub fn answer_1() {
     println!("Found {} unique numbers", count);
 }
 
-pub fn answer_2() {}
+pub fn answer_2() {
+    let inputs = parse_input("inputs/day_8.txt");
+    println!("Found {} input problems.", inputs.len());
+    let mut count = 0;
+    for input in inputs {
+        let display = solve_signals(&input.signals);
+        println!("{:?}", display);
+        count += input.output.iter().rev().enumerate().map(|(i, n)| (10_i32.pow(i as u32)) * display.convert_to_number(n)).sum::<i32>();
+    }
+    println!("Total of all outputs is {}", count);
+}
 
+
+
+#[derive(Eq, PartialEq, Debug)]
 struct Number {
     segments: HashSet<char>,
 }
@@ -31,17 +44,56 @@ impl Number {
     }
 }
 
-struct Display {
-    top: char,
-    tle: char,
-    tri: char,
-    mid: char,
-    bot: char,
-    ble: char,
-    bri: char,
+#[derive(Debug)]
+struct Display<T> {
+    top: T,
+    tle: T,
+    tri: T,
+    mid: T,
+    ble: T,
+    bri: T,
+    bot: T,
 }
 
-impl Display {}
+impl Display<char> {
+    fn convert_to_number(&self, number: &Number) -> i32 {
+        let zero:HashSet<char> = HashSet::from_iter([self.top, self.tle, self.tri, self.ble, self.bri, self.bot]);
+        let one:HashSet<char> = HashSet::from_iter([self.tri, self.bri]);
+        let two:HashSet<char> = HashSet::from_iter([self.top, self.tri, self.mid, self.ble, self.bot]);
+        let three:HashSet<char> = HashSet::from_iter([self.top, self.tri, self.mid, self.bri, self.bot]);
+        let four:HashSet<char> = HashSet::from_iter([self.tle, self.tri, self.mid, self.bri]);
+        let five:HashSet<char> = HashSet::from_iter([self.tle, self.tri, self.mid, self.bri]);
+        let six:HashSet<char> = HashSet::from_iter([self.top, self.tle, self.mid, self.ble, self.bri, self.bot]);
+        let seven:HashSet<char> = HashSet::from_iter([self.top, self.tri, self.bri]);
+        let eight:HashSet<char> = HashSet::from_iter([self.top, self.tle, self.tri, self.mid, self.ble, self.bri, self.bot]);
+        let nine:HashSet<char> = HashSet::from_iter([self.top, self.tle, self.tri, self.mid, self.bri, self.bot]);
+        match number.segments.len() {
+            2 => 1,
+            3 => 7,
+            4 => 4,
+            7 => 8,
+            5 => {
+                return if two.is_subset(&number.segments) {
+                    2
+                } else if three.is_subset(&number.segments) {
+                    3
+                } else {
+                    5
+                }
+            },
+            6 => {
+                return if zero.is_subset(&number.segments) {
+                    0
+                } else if six.is_subset(&number.segments) {
+                    6
+                } else {
+                    9
+                }
+            }
+            _ => panic!("Invalid number"),
+        }
+    }
+}
 
 struct Input {
     signals: Vec<Number>,
@@ -70,20 +122,61 @@ impl Input {
     }
 }
 
-fn solve_signals(signals: &Vec<Number>) -> Display {
+fn solve_signals(signals: &Vec<Number>) -> Display<char> {
     let one = signals.iter().find(|n| n.segments.len() == 2).unwrap();
     let four = signals.iter().find(|n| n.segments.len() == 4).unwrap();
     let seven = signals.iter().find(|n| n.segments.len() == 3).unwrap();
-    let zero_six_nine: Vec<&Number> = signals.iter().filter(|n| n.segments.len() == 6).collect();
+    let eight = signals.iter().find(|n| n.segments.len() == 7).unwrap();
+    let mut zero_six_nine: Vec<&Number> = signals.iter().filter(|n| n.segments.len() == 6).collect();
 
-    let top: char = *seven.segments.difference(&one.segments).collect::<Vec<char>>().first().unwrap();
-    let tle: HashSet<char>;
-    let tri: HashSet<char>;
-    let mid: HashSet<char>;
-    let bot: HashSet<char>;
-    let ble: HashSet<char>;
-    let bri: HashSet<char>;
+    // Fill out the top bar by subtracting the one from the seven
+    let top: char = **seven
+        .segments
+        .difference(&one.segments)
+        .collect::<Vec<&char>>()
+        .first()
+        .unwrap();
 
+
+    // We know the nine has to share 5 parts with the four and the top part, and
+    let nine_parts = four.segments.union(&seven.segments).map(|c| *c).collect::<HashSet<char>>();
+    assert_eq!(5, nine_parts.len());
+    let nine = *zero_six_nine.iter().find(|&n| nine_parts.is_subset(&n.segments)).unwrap();
+    let zero_six: Vec<&Number> = zero_six_nine.into_iter().filter(|&n| n != nine).collect();
+
+    // The bottom bar must be the difference between the parts and the actual nine.
+    let bot = **nine.segments.difference(&nine_parts).collect::<Vec<&char>>().first().unwrap();
+
+    // The bottom left must be the difference between the eight and the nine.
+    let ble = **eight.segments.difference(&nine.segments).collect::<Vec<&char>>().first().unwrap();
+
+    // Gather the 5 parts of the zero that we know.
+    let mut zero_parts: HashSet<char> = seven.segments.clone();
+    zero_parts.insert(bot);
+    zero_parts.insert(bot);
+    zero_parts.insert(ble);
+    assert_eq!(5, zero_parts.len());
+    let zero = *zero_six.iter().find(|&n| zero_parts.is_subset(&n.segments)).unwrap();
+    let six = *zero_six.into_iter().filter(|&n| n != zero).collect::<Vec<&Number>>().first().unwrap();
+
+    let tle = **zero.segments.difference(&zero_parts).collect::<Vec<&char>>().first().unwrap();
+    // The top left part or the middle part must be the parts of the four minus the parts of the one.
+    let mut tle_mid = four.segments.difference(&one.segments).map(|c| *c).collect::<HashSet<char>>();
+    tle_mid.remove(&tle);
+    let mid = **tle_mid.iter().collect::<Vec<&char>>().first().unwrap();
+
+    let mut six_parts = HashSet::new();
+    six_parts.insert(bot);
+    six_parts.insert(ble);
+    six_parts.insert(mid);
+    six_parts.insert(tle);
+    six_parts.insert(top);
+    let bri = **six.segments.difference(&six_parts).collect::<Vec<&char>>().first().unwrap();
+    let tri = **eight.segments.difference(&six.segments).collect::<Vec<&char>>().first().unwrap();
+
+    Display {
+        top, tle, tri, mid, ble, bri, bot
+    }
 }
 
 fn parse_input(filepath: &str) -> Vec<Input> {
@@ -96,20 +189,6 @@ fn parse_input(filepath: &str) -> Vec<Input> {
             Input::new(line.clone())
         })
         .collect()
-}
-
-fn create_knowledge_dict() {
-    let mut dict = HashMap::new();
-    dict.insert(0, 6);
-    dict.insert(1, 2);
-    dict.insert(2, 5);
-    dict.insert(3, 5);
-    dict.insert(4, 4);
-    dict.insert(5, 5);
-    dict.insert(6, 6);
-    dict.insert(7, 3);
-    dict.insert(8, 7);
-    dict.insert(9, 6);
 }
 
 fn check_number(num_segments: i32) -> Option<i32> {
