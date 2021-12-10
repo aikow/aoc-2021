@@ -4,5 +4,5 @@ mod days;
 extern crate lazy_static;
 
 fn main() {
-    days::day_9::answer_2();
+    days::day_10::answer_2();
 }
