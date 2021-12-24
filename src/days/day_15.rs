@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader};
 
 pub fn answer_1() {
     let graph = parse_input("inputs/day_15/input.txt");
-    print_graph(&graph);
+    // print_graph(&graph);
 
     if let Some(cost) = shortest_path(
         &graph,
@@ -24,12 +24,12 @@ pub fn answer_1() {
 
 pub fn answer_2() {
     let graph = parse_input("inputs/day_15/input.txt");
-    println!("original graph");
-    print_graph(&graph);
+    // println!("original graph");
+    // print_graph(&graph);
 
     let large_graph = create_tiled_graph(&graph, 5, 5);
-    println!("Large graph: ");
-    print_graph(&large_graph);
+    // println!("Large graph: ");
+    // print_graph(&large_graph);
 
     if let Some(cost) = shortest_path(
         &large_graph,
